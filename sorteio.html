@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel de Sorteio • HabitPAY</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Poppins',sans-serif;
+}
+
+body{
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:
+        radial-gradient(circle at top right,#00e67633,transparent 25%),
+        radial-gradient(circle at bottom left,#2196f333,transparent 25%),
+        linear-gradient(135deg,#07142f,#0c2d63,#1263b5);
+    color:white;
+    flex-direction:column;
+    text-align:center;
+    padding:30px 16px;
+}
+
+h1{
+    font-size:2.2rem;
+    margin-bottom:5px;
+}
+
+.subtitulo{
+    opacity:.8;
+    margin-bottom:30px;
+}
+
+.painel{
+    background:rgba(255,255,255,.1);
+    backdrop-filter:blur(20px);
+    border:1px solid rgba(255,255,255,.2);
+    border-radius:30px;
+    padding:35px;
+    max-width:520px;
+    width:100%;
+}
+
+.contagem{
+    display:flex;
+    justify-content:space-around;
+    margin-bottom:25px;
+    gap:10px;
+    flex-wrap:wrap;
+}
+
+.contagem div{
+    background:rgba(255,255,255,.08);
+    border-radius:16px;
+    padding:14px 18px;
+    flex:1;
+    min-width:100px;
+}
+
+.contagem span{
+    display:block;
+    font-size:1.6rem;
+    font-weight:700;
+    color:#00e676;
+}
+
+.contagem p{
+    font-size:.8rem;
+    opacity:.8;
+    margin-top:4px;
+}
+
+select{
+    width:100%;
+    padding:16px;
+    border:none;
+    border-radius:14px;
+    background:white;
+    color:#222;
+    font-size:1rem;
+    margin-bottom:15px;
+}
+
+button{
+    width:100%;
+    padding:16px;
+    font-size:17px;
+    font-weight:600;
+    cursor:pointer;
+    border:none;
+    border-radius:14px;
+    background:linear-gradient(135deg,#00c853,#00e676);
+    color:#07142f;
+    transition:.25s;
+}
+
+button:hover:not(:disabled){
+    transform:translateY(-2px);
+}
+
+button:disabled{
+    opacity:.5;
+    cursor:not-allowed;
+}
+
+button.secundario{
+    background:rgba(255,255,255,.12);
+    color:white;
+    border:1px solid rgba(255,255,255,.25);
+    margin-top:12px;
+}
+
+#resultado{
+    margin-top:25px;
+    min-height:90px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.vencedor{
+    background:rgba(0,230,118,.12);
+    border:2px solid #00e676;
+    border-radius:20px;
+    padding:20px;
+    width:100%;
+    animation:surgir .4s ease;
+}
+
+.vencedor .nome{
+    font-size:1.6rem;
+    font-weight:700;
+    margin-bottom:4px;
+}
+
+.vencedor .detalhe{
+    opacity:.85;
+    font-size:.9rem;
+}
+
+.aviso{
+    opacity:.75;
+    font-size:.95rem;
+}
+
+.lista-sorteados{
+    margin-top:25px;
+    text-align:left;
+}
+
+.lista-sorteados h3{
+    font-size:.95rem;
+    opacity:.8;
+    margin-bottom:10px;
+}
+
+.lista-sorteados ol{
+    list-style:decimal;
+    padding-left:20px;
+    font-size:.9rem;
+    opacity:.9;
+    line-height:1.6;
+}
+
+@keyframes surgir{
+    from{ opacity:0; transform:scale(.92); }
+    to{ opacity:1; transform:scale(1); }
+}
+
+</style>
+</head>
+<body>
+
+<h1>🎁 Sorteio HabitPAY</h1>
+<p class="subtitulo">Evento CEIMM 2026</p>
+
+<div class="painel">
+
+    <div class="contagem">
+        <div>
+            <span id="totalManha">0</span>
+            <p>Manhã</p>
+        </div>
+        <div>
+            <span id="totalTarde">0</span>
+            <p>Tarde</p>
+        </div>
+        <div>
+            <span id="totalGeral">0</span>
+            <p>Total elegíveis</p>
+        </div>
+    </div>
+
+    <select id="turno">
+        <option value="Manhã">Manhã</option>
+        <option value="Tarde">Tarde</option>
+    </select>
+
+    <button id="btnSortear">Realizar Sorteio 🎲</button>
+    <button id="btnReiniciar" class="secundario">Reiniciar sorteados</button>
+
+    <div id="resultado">
+        <p class="aviso">Selecione um turno e clique em "Realizar Sorteio".</p>
+    </div>
+
+    <div class="lista-sorteados" id="listaSorteados" hidden>
+        <h3>🏆 Ganhadores anteriores</h3>
+        <ol id="listaSorteadosItens"></ol>
+    </div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+
+import {
+    getFirestore,
+    collection,
+    getDocs
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBkK1giaVMO6DRP9yaQQ0-uFFl5ZSGOHyY",
+    authDomain: "habitpayceimm.firebaseapp.com",
+    projectId: "habitpayceimm",
+    storageBucket: "habitpayceimm.firebasestorage.app",
+    messagingSenderId: "855349178370",
+    appId: "1:855349178370:web:aa0ae4e99c743d22d7371b"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const SORTEADOS_KEY = "habitpay_sorteados";
+
+const selectTurno = document.getElementById("turno");
+const btnSortear = document.getElementById("btnSortear");
+const btnReiniciar = document.getElementById("btnReiniciar");
+const resultado = document.getElementById("resultado");
+const listaSorteados = document.getElementById("listaSorteados");
+const listaSorteadosItens = document.getElementById("listaSorteadosItens");
+
+async function carregarParticipantes() {
+
+    const snapshot = await getDocs(
+        collection(db, "participantes")
+    );
+
+    const participantes = [];
+
+    snapshot.forEach((doc) => {
+
+        participantes.push({
+            id: doc.id,
+            ...doc.data()
+        });
+
+    });
+
+    return participantes;
+}
+
+function lerSorteados() {
+
+    try {
+
+        return JSON.parse(
+            localStorage.getItem(SORTEADOS_KEY)
+        ) || [];
+
+    } catch {
+
+        return [];
+
+    }
+
+}
+
+function salvarSorteados(lista) {
+
+    localStorage.setItem(
+        SORTEADOS_KEY,
+        JSON.stringify(lista)
+    );
+
+}
+
+async function atualizarContagens() {
+
+    const participantes =
+        await carregarParticipantes();
+
+    const sorteados =
+        lerSorteados().map(
+            s => s.telefone
+        );
+
+    const elegiveis =
+        participantes.filter(
+            p => !sorteados.includes(
+                p.telefone
+            )
+        );
+
+    document.getElementById("totalManha").textContent =
+        elegiveis.filter(
+            p => p.turno === "Manhã"
+        ).length;
+
+    document.getElementById("totalTarde").textContent =
+        elegiveis.filter(
+            p => p.turno === "Tarde"
+        ).length;
+
+    document.getElementById("totalGeral").textContent =
+        elegiveis.length;
+}
+
+function atualizarListaSorteados() {
+
+    const sorteados =
+        lerSorteados();
+
+    if (!sorteados.length) {
+
+        listaSorteados.hidden = true;
+        return;
+
+    }
+
+    listaSorteados.hidden = false;
+
+    listaSorteadosItens.innerHTML =
+        sorteados.map(
+            s => `
+                <li>
+                    ${s.nome}
+                    —
+                    ${s.turno}
+                    (${s.turma})
+                </li>
+            `
+        ).join("");
+}
+
+async function sortear() {
+
+    const turnoEscolhido =
+        selectTurno.value;
+
+    const participantes =
+        await carregarParticipantes();
+
+    const sorteados =
+        lerSorteados();
+
+    const telefonesJaSorteados =
+        sorteados.map(
+            s => s.telefone
+        );
+
+    const elegiveis =
+        participantes.filter(
+            p =>
+                p.turno === turnoEscolhido &&
+                !telefonesJaSorteados.includes(
+                    p.telefone
+                )
+        );
+
+    if (!elegiveis.length) {
+
+        resultado.innerHTML = `
+            <p class="aviso">
+                Nenhum participante disponível
+                neste turno.
+            </p>
+        `;
+
+        return;
+    }
+
+    btnSortear.disabled = true;
+
+    resultado.innerHTML = `
+        <p class="aviso">
+            🎲 Sorteando...
+        </p>
+    `;
+
+    setTimeout(async () => {
+
+        const indice =
+            Math.floor(
+                Math.random() *
+                elegiveis.length
+            );
+
+        const ganhador =
+            elegiveis[indice];
+
+        sorteados.push(
+            ganhador
+        );
+
+        salvarSorteados(
+            sorteados
+        );
+
+        resultado.innerHTML = `
+            <div class="vencedor">
+
+                <div class="nome">
+                    🎉 ${ganhador.nome}
+                </div>
+
+                <div class="detalhe">
+                    Turma ${ganhador.turma}
+                </div>
+
+                <div class="detalhe">
+                    Turno ${ganhador.turno}
+                </div>
+
+                <div class="detalhe">
+                    📱 ${ganhador.telefone}
+                </div>
+
+            </div>
+        `;
+
+        await atualizarContagens();
+
+        atualizarListaSorteados();
+
+        btnSortear.disabled = false;
+
+    }, 1500);
+}
+
+btnSortear.addEventListener(
+    "click",
+    async () => {
+        await sortear();
+    }
+);
+
+btnReiniciar.addEventListener(
+    "click",
+    async () => {
+
+        if (
+            confirm(
+                "Deseja limpar a lista de ganhadores?"
+            )
+        ) {
+
+            salvarSorteados([]);
+
+            await atualizarContagens();
+
+            atualizarListaSorteados();
+
+            resultado.innerHTML = `
+                <p class="aviso">
+                    Lista reiniciada.
+                </p>
+            `;
+        }
+
+    }
+);
+
+await atualizarContagens();
+atualizarListaSorteados();
+
+</script>
+
+</body>
+</html>

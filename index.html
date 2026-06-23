@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Cadastre-se no sorteio HabitPAY durante o evento CEIMM 2026: Inteligência Artificial, Startups e as Profissões do Amanhã.">
+
+<title>Sorteio CEIMM • HabitPAY</title>
+
+<link rel="stylesheet" href="style.css">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+<section class="hero">
+
+    <div class="hero-overlay"></div>
+
+    <div class="container">
+        <span class="evento-badge">
+            🚀 Evento CEIMM 2026
+        </span>
+
+        <h1>
+            Inteligência Artificial,
+            Startups e as
+            Profissões do Amanhã
+        </h1>
+
+        <p class="descricao">
+            Descubra como a tecnologia está transformando carreiras,
+            criando novas oportunidades e moldando o futuro do mercado de trabalho.
+        </p>
+
+        <div class="card">
+
+            <h2>🎁 Participar do Sorteio</h2>
+
+            <p class="subtitulo">
+                Preencha seus dados e concorra aos brindes exclusivos da HabitPAY.
+            </p>
+
+            <form id="sorteioForm" novalidate>
+
+                <div class="campo">
+                    <input type="text" id="nome" name="nome" placeholder="Nome Completo" autocomplete="name" required minlength="3">
+                    <span class="erro" data-erro-de="nome"></span>
+                </div>
+
+                <div class="campo">
+                    <input type="text" id="turma" name="turma" placeholder="Turma" autocomplete="off" required>
+                    <span class="erro" data-erro-de="turma"></span>
+                </div>
+
+                <div class="campo">
+                    <input type="tel" id="whatsapp" name="whatsapp" placeholder="WhatsApp (com DDD)" autocomplete="tel" inputmode="numeric" required>
+                    <span class="erro" data-erro-de="whatsapp"></span>
+                </div>
+
+                <div class="campo">
+                    <select id="turno" name="turno" required>
+                        <option value="">Selecione seu turno</option>
+                        <option value="Manhã">Manhã</option>
+                        <option value="Tarde">Tarde</option>
+                    </select>
+                    <span class="erro" data-erro-de="turno"></span>
+                </div>
+
+                <label class="check">
+                    <input type="checkbox" id="consentimento" required>
+
+                    <span>
+                        Autorizo o uso dos meus dados exclusivamente para participação neste sorteio.
+                    </span>
+                </label>
+
+                <button type="submit" id="btnEnviar">
+                    Participar Agora 🚀
+                </button>
+
+                <p id="mensagemStatus" class="mensagem-status" role="status" aria-live="polite"></p>
+
+            </form>
+
+        </div>
+
+        <section class="sobre">
+
+            <h2>🎤 Sobre o Palestrante</h2>
+
+            <div class="info-card">
+
+                <h3>Dalton José Neres</h3>
+
+                <p>
+                    Desenvolvedor Full Stack, empreendedor e entusiasta da inovação tecnológica.
+                    Atua na criação de sistemas, plataformas web e soluções baseadas em Inteligência Artificial.
+                </p>
+
+                <p>
+                    Sua missão é aproximar a tecnologia das pessoas e mostrar como a inovação pode gerar oportunidades reais.
+                </p>
+
+            </div>
+
+        </section>
+
+        <section class="sobre">
+
+            <h2>🚀 Sobre a Palestra</h2>
+
+            <div class="info-card">
+
+                <p>
+                    Nesta palestra serão abordados temas como Inteligência Artificial,
+                    empreendedorismo, startups, profissões emergentes e as habilidades
+                    mais valorizadas para o futuro.
+                </p>
+
+                <p>
+                    Uma experiência inspiradora para estudantes que desejam entender
+                    as transformações do mercado e se preparar para novas oportunidades.
+                </p>
+
+            </div>
+
+        </section>
+
+        <section class="numeros">
+
+            <h2>📚 Alcance Previsto</h2>
+
+            <div class="grid">
+
+                <div class="numero-card">
+                    <span class="contador" data-target="278">0</span>
+                    <p>Estudantes Manhã</p>
+                </div>
+
+                <div class="numero-card">
+                    <span class="contador" data-target="124">0</span>
+                    <p>Estudantes Tarde</p>
+                </div>
+
+                <div class="numero-card destaque">
+                    <span class="contador" data-target="402">0</span>
+                    <p>Total Previsto</p>
+                </div>
+
+            </div>
+
+        </section>
+
+        <section class="frase-final">
+
+            <h2>💡 O Futuro Está Sendo Construído Agora</h2>
+
+            <p>
+                A tecnologia não substitui pessoas.
+                Ela potencializa quem está preparado para utilizá-la.
+            </p>
+
+        </section>
+
+        <footer>
+
+            <h3>HabitPAY</h3>
+
+            <p>
+                Transformando hábitos em resultados através da tecnologia.
+            </p>
+
+            <p>
+                © 2026 HabitPAY Tecnologia Ltda. • CNPJ 66.877.250/0001-12
+            </p>
+
+            <p>
+                Inteligência Artificial • Inovação • Empreendedorismo
+            </p>
+
+        </footer>
+
+    </div>
+
+</section>
+
+<script>
+const counters = document.querySelectorAll('.contador');
+
+const counterObserver = new IntersectionObserver((entries) => {
+
+    entries.forEach(entry => {
+
+        if (entry.isIntersecting) {
+
+            const counter = entry.target;
+            const target = +counter.dataset.target;
+
+            let current = 0;
+            const increment = target / 80;
+
+            const updateCounter = () => {
+
+                if (current < target) {
+
+                    current += increment;
+                    counter.innerText = Math.ceil(current);
+
+                    requestAnimationFrame(updateCounter);
+
+                } else {
+
+                    counter.innerText = target;
+
+                }
+
+            };
+
+            updateCounter();
+            counterObserver.unobserve(counter);
+
+        }
+
+    });
+
+}, {
+    threshold: 0.5
+});
+
+counters.forEach(counter => {
+    counterObserver.observe(counter);
+});
+</script>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+
+import {
+    getFirestore,
+    collection,
+    addDoc,
+    query,
+    where,
+    getDocs,
+    serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBkK1giaVMO6DRP9yaQQ0-uFFl5ZSGOHyY",
+    authDomain: "habitpayceimm.firebaseapp.com",
+    projectId: "habitpayceimm",
+    storageBucket: "habitpayceimm.firebasestorage.app",
+    messagingSenderId: "855349178370",
+    appId: "1:855349178370:web:aa0ae4e99c743d22d7371b"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const form = document.getElementById('sorteioForm');
+const btnEnviar = document.getElementById('btnEnviar');
+const mensagemStatus = document.getElementById('mensagemStatus');
+
+function limparTelefone(valor) {
+    return valor.replace(/\D/g, '');
+}
+
+function mostrarMensagem(texto, tipo) {
+    mensagemStatus.innerHTML = texto;
+    mensagemStatus.className = `mensagem-status ${tipo}`;
+}
+
+form.addEventListener('submit', async (evento) => {
+
+    evento.preventDefault();
+
+    const nome = document.getElementById('nome').value.trim();
+    const turma = document.getElementById('turma').value.trim();
+    const whatsapp = limparTelefone(
+        document.getElementById('whatsapp').value
+    );
+    const turno = document.getElementById('turno').value;
+
+    if (!nome || !turma || !whatsapp || !turno) {
+        mostrarMensagem(
+            '⚠️ Preencha todos os campos.',
+            'erro-msg'
+        );
+        return;
+    }
+
+    if (whatsapp.length < 10) {
+        mostrarMensagem(
+            '⚠️ Informe um WhatsApp válido.',
+            'erro-msg'
+        );
+        return;
+    }
+
+    try {
+
+        btnEnviar.disabled = true;
+        btnEnviar.textContent = 'Verificando...';
+
+        const q = query(
+            collection(db, 'participantes'),
+            where('telefone', '==', whatsapp)
+        );
+
+        const participante = await getDocs(q);
+
+        if (!participante.empty) {
+
+            mostrarMensagem(
+                '⚠️ Este WhatsApp já está participando do sorteio.',
+                'info-msg'
+            );
+
+            btnEnviar.disabled = false;
+            btnEnviar.textContent = 'Participar Agora 🚀';
+
+            return;
+        }
+
+        await addDoc(
+            collection(db, 'participantes'),
+            {
+                nome,
+                turma,
+                telefone: whatsapp,
+                turno,
+                status: 'ativo',
+                createdAt: serverTimestamp()
+            }
+        );
+
+        form.reset();
+
+        mostrarMensagem(
+            `🎉 <strong>Inscrição realizada com sucesso!</strong><br>
+            Você já está concorrendo ao sorteio do período <strong>${turno}</strong>.`,
+            'sucesso-msg'
+        );
+
+        btnEnviar.textContent = 'Inscrição Confirmada ✅';
+
+    } catch (erro) {
+
+        console.error(erro);
+
+        mostrarMensagem(
+            '❌ Erro ao registrar inscrição.',
+            'erro-msg'
+        );
+
+        btnEnviar.disabled = false;
+        btnEnviar.textContent = 'Participar Agora 🚀';
+
+    }
+
+});
+
+</script>
+
+</body>
+</html>
