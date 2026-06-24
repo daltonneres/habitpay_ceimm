@@ -179,6 +179,31 @@ button.secundario{
     to{ opacity:1; transform:scale(1); }
 }
 
+.login-erro{
+    color:#ff8a80;
+    font-size:.85rem;
+    margin-top:-6px;
+    margin-bottom:14px;
+    min-height:18px;
+}
+
+.login-info{
+    opacity:.6;
+    font-size:.8rem;
+    margin-top:18px;
+}
+
+.campo-login{
+    width:100%;
+    padding:16px;
+    border:none;
+    border-radius:14px;
+    background:white;
+    color:#222;
+    font-size:1rem;
+    margin-bottom:12px;
+}
+
 </style>
 </head>
 <body>
@@ -186,7 +211,24 @@ button.secundario{
 <h1>🎁 Sorteio HabitPAY</h1>
 <p class="subtitulo">Evento CEIMM 2026</p>
 
-<div class="painel">
+<div class="painel" id="painelLogin">
+
+    <p style="margin-bottom:18px; opacity:.85;">
+        Acesso restrito à equipe organizadora.
+    </p>
+
+    <input type="text" id="loginUsuario" class="campo-login" placeholder="Usuário">
+    <input type="password" id="loginSenha" class="campo-login" placeholder="Senha">
+
+    <p class="login-erro" id="loginErro"></p>
+
+    <button id="btnEntrar">Entrar 🔑</button>
+
+    <p class="login-info">Acesso rápido para controle do evento.</p>
+
+</div>
+
+<div class="painel" id="painelPrincipal" hidden>
 
     <div class="contagem">
         <div>
@@ -220,7 +262,12 @@ button.secundario{
         <ol id="listaSorteadosItens"></ol>
     </div>
 
+    <button id="btnGerarPDF" class="secundario" style="margin-top:18px;">📄 Gerar PDF dos Ganhadores</button>
+    <button id="btnGerarPDFInscritos" class="secundario" style="margin-top:10px;">📋 Gerar PDF dos Inscritos</button>
+
 </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script type="module">
 
@@ -245,6 +292,56 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const SORTEADOS_KEY = "habitpay_sorteados";
+const SESSAO_KEY = "habitpay_sessao";
+
+// Credenciais fixas de acesso rápido (login fictício para controle do evento)
+const USUARIO_VALIDO = "ceimm";
+const SENHA_VALIDA = "habitpay2026";
+
+const painelLogin = document.getElementById("painelLogin");
+const painelPrincipal = document.getElementById("painelPrincipal");
+const inputUsuario = document.getElementById("loginUsuario");
+const inputSenha = document.getElementById("loginSenha");
+const loginErro = document.getElementById("loginErro");
+const btnEntrar = document.getElementById("btnEntrar");
+
+function estaLogado() {
+    return sessionStorage.getItem(SESSAO_KEY) === "ok";
+}
+
+function entrar() {
+
+    const usuario = inputUsuario.value.trim().toLowerCase();
+    const senha = inputSenha.value;
+
+    if (usuario === USUARIO_VALIDO && senha === SENHA_VALIDA) {
+
+        sessionStorage.setItem(SESSAO_KEY, "ok");
+        mostrarPainelPrincipal();
+
+    } else {
+
+        loginErro.textContent = "Usuário ou senha inválidos.";
+
+    }
+
+}
+
+async function mostrarPainelPrincipal() {
+
+    painelLogin.hidden = true;
+    painelPrincipal.hidden = false;
+
+    await atualizarContagens();
+    atualizarListaSorteados();
+
+}
+
+btnEntrar.addEventListener("click", entrar);
+
+inputSenha.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") entrar();
+});
 
 const selectTurno = document.getElementById("turno");
 const btnSortear = document.getElementById("btnSortear");
@@ -252,6 +349,8 @@ const btnReiniciar = document.getElementById("btnReiniciar");
 const resultado = document.getElementById("resultado");
 const listaSorteados = document.getElementById("listaSorteados");
 const listaSorteadosItens = document.getElementById("listaSorteadosItens");
+const btnGerarPDF = document.getElementById("btnGerarPDF");
+const btnGerarPDFInscritos = document.getElementById("btnGerarPDFInscritos");
 
 async function carregarParticipantes() {
 
@@ -451,6 +550,158 @@ async function sortear() {
     }, 1500);
 }
 
+function gerarPDF() {
+
+    const sorteados = lerSorteados();
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    const dataHora = new Date().toLocaleString("pt-BR");
+
+    doc.setFontSize(18);
+    doc.setTextColor(7, 20, 47);
+    doc.text("Sorteio HabitPAY", 14, 18);
+
+    doc.setFontSize(11);
+    doc.setTextColor(90, 90, 90);
+    doc.text("Evento CEIMM 2026", 14, 25);
+    doc.text(`Gerado em: ${dataHora}`, 14, 31);
+
+    doc.setDrawColor(200, 200, 200);
+    doc.line(14, 35, 196, 35);
+
+    const totalManha = sorteados.filter(s => s.turno === "Manhã").length;
+    const totalTarde = sorteados.filter(s => s.turno === "Tarde").length;
+
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Total de ganhadores: ${sorteados.length}`, 14, 44);
+    doc.text(`Manhã: ${totalManha}    Tarde: ${totalTarde}`, 14, 51);
+
+    let y = 62;
+
+    if (!sorteados.length) {
+
+        doc.setFontSize(11);
+        doc.text("Nenhum ganhador sorteado até o momento.", 14, y);
+
+    } else {
+
+        doc.setFontSize(13);
+        doc.text("Lista de ganhadores:", 14, y);
+        y += 8;
+
+        sorteados.forEach((s, i) => {
+
+            if (y > 280) {
+                doc.addPage();
+                y = 20;
+            }
+
+            doc.setFontSize(11);
+            doc.setTextColor(0, 0, 0);
+            doc.text(`${i + 1}. ${s.nome}`, 14, y);
+
+            doc.setFontSize(10);
+            doc.setTextColor(100, 100, 100);
+            doc.text(
+                `Turma ${s.turma}  •  Turno ${s.turno}  •  ${s.telefone}`,
+                14,
+                y + 5
+            );
+
+            y += 13;
+
+        });
+
+    }
+
+    doc.save(`sorteio-habitpay-${Date.now()}.pdf`);
+
+}
+
+async function gerarPDFInscritos() {
+
+    btnGerarPDFInscritos.disabled = true;
+    btnGerarPDFInscritos.textContent = "Carregando...";
+
+    const participantes = await carregarParticipantes();
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    const dataHora = new Date().toLocaleString("pt-BR");
+
+    doc.setFontSize(18);
+    doc.setTextColor(7, 20, 47);
+    doc.text("Inscritos - Sorteio HabitPAY", 14, 18);
+
+    doc.setFontSize(11);
+    doc.setTextColor(90, 90, 90);
+    doc.text("Evento CEIMM 2026", 14, 25);
+    doc.text(`Gerado em: ${dataHora}`, 14, 31);
+
+    doc.setDrawColor(200, 200, 200);
+    doc.line(14, 35, 196, 35);
+
+    const totalManha = participantes.filter(p => p.turno === "Manhã").length;
+    const totalTarde = participantes.filter(p => p.turno === "Tarde").length;
+
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Total de inscritos: ${participantes.length}`, 14, 44);
+    doc.text(`Manhã: ${totalManha}    Tarde: ${totalTarde}`, 14, 51);
+
+    let y = 62;
+
+    if (!participantes.length) {
+
+        doc.setFontSize(11);
+        doc.text("Nenhum inscrito encontrado.", 14, y);
+
+    } else {
+
+        doc.setFontSize(13);
+        doc.text("Lista de inscritos:", 14, y);
+        y += 8;
+
+        participantes.forEach((p, i) => {
+
+            if (y > 280) {
+                doc.addPage();
+                y = 20;
+            }
+
+            doc.setFontSize(11);
+            doc.setTextColor(0, 0, 0);
+            doc.text(`${i + 1}. ${p.nome || "(sem nome)"}`, 14, y);
+
+            doc.setFontSize(10);
+            doc.setTextColor(100, 100, 100);
+            doc.text(
+                `Turma ${p.turma || "-"}  •  Turno ${p.turno || "-"}  •  ${p.telefone || "-"}`,
+                14,
+                y + 5
+            );
+
+            y += 13;
+
+        });
+
+    }
+
+    doc.save(`inscritos-habitpay-${Date.now()}.pdf`);
+
+    btnGerarPDFInscritos.disabled = false;
+    btnGerarPDFInscritos.textContent = "📋 Gerar PDF dos Inscritos";
+
+}
+
+btnGerarPDFInscritos.addEventListener("click", gerarPDFInscritos);
+
+btnGerarPDF.addEventListener("click", gerarPDF);
+
 btnSortear.addEventListener(
     "click",
     async () => {
@@ -484,8 +735,9 @@ btnReiniciar.addEventListener(
     }
 );
 
-await atualizarContagens();
-atualizarListaSorteados();
+if (estaLogado()) {
+    await mostrarPainelPrincipal();
+}
 
 </script>
 
